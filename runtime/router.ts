@@ -65,7 +65,7 @@ customElements.define(
       });
     }
 
-    async #load(url: URL, options?: { replace?: boolean; refresh?: boolean }) {
+    async #load(url: URL, options?: { replace?: boolean; refresh?: boolean; pop?: boolean }) {
       this.#currentRoute = getRouteKey(url);
       let JS: string | undefined;
       let cachedContent = this.#cache.get(this.#currentRoute);
@@ -89,10 +89,14 @@ customElements.define(
         }
         this.#setContent(content);
       }
-      history[options?.replace ? "replaceState" : "pushState"]({}, "", url);
+      // on a fresh (forward) navigation, update history and reset the scroll to
+      // the top of the page; for back/forward (popstate) `location` is already
+      // updated and the browser restores the scroll position natively
+      if (!options?.pop) {
+        history[options?.replace ? "replaceState" : "pushState"]({}, "", url);
+        win.scrollTo(0, 0);
+      }
       this.#updateNavLinks();
-      // scroll to the top of the page after navigation
-      window.scrollTo(0, 0);
       if (JS) {
         doc.body.appendChild(doc.createElement("script")).textContent = JS;
       }
@@ -165,7 +169,7 @@ customElements.define(
 
       this.#onPopstate = () => {
         if (getRouteKey(loc) !== this.#currentRoute) {
-          this.#load(new URL(loc.href));
+          this.#load(new URL(loc.href), { pop: true });
         }
       };
 
