@@ -17,7 +17,6 @@ customElements.define(
     #cache = new Map<string, string | Node[]>();
     #currentRoute = getRouteKey(loc);
     #fallback?: ChildNode[];
-    #viewTransition = true;
 
     #onClick?: (e: MouseEvent) => void;
     #onPopstate?: (e: PopStateEvent) => void;
@@ -45,12 +44,11 @@ customElements.define(
 
     #setContent(body: string | Node[]) {
       const update = () => typeof body === "string" ? this.innerHTML = body : this.replaceChildren(...body);
-      if (this.hasAttribute("vt") && doc.startViewTransition && !this.#viewTransition) {
+      if (this.hasAttribute("vt") && doc.startViewTransition) {
         doc.startViewTransition(update);
       } else {
         update();
       }
-      this.#viewTransition = false;
     }
 
     #updateNavLinks() {
@@ -146,7 +144,7 @@ customElements.define(
           return;
         }
 
-        const hrefAttr = (e.target as HTMLAnchorElement).getAttribute("href");
+        const hrefAttr = e.target.getAttribute("href");
         if (!hrefAttr || hrefAttr.startsWith("#")) {
           return;
         }
@@ -175,7 +173,7 @@ customElements.define(
 
       win.addEventListener("popstate", this.#onPopstate);
       doc.addEventListener("click", this.#onClick);
-      setTimeout(() => this.#updateNavLinks());
+      requestAnimationFrame(() => this.#updateNavLinks());
     }
 
     disconnectedCallback() {
