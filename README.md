@@ -1226,7 +1226,7 @@ async function Post(this: FC) {
   </div>
 }
 
-Post.getMetadata = async function(this: FC) {
+Post.getMetadata = async function(this: FC): Promise<Metadata> {
   const post = await getPost(this.request.params.slug)
   return {
     title: post.title,
